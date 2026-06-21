@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE sodaconstructor>
+<model>
+	<comment></comment>
+	<container width="830" height="542"/>
+	<environment gravity="0.0" friction="0.0105686085" springyness="0.5"/>
+	<collisions surface_friction="0.1" surface_reflection="-0.75"/>
+	<wave amplitude="1.0" phase="0.23529412" speed="0.009803922"/>
+	<settings gravitydirection="off" wavedirection="forward" autoreverse="on"/>
+
+	<nodes>
+		<mass id="m0" x="323.9427" y="376.0" vx="0.53110784" vy="0.0"/>
+		<mass id="m1" x="324.0573" y="376.0" vx="-0.53110784" vy="0.0"/>
+		<mass id="m2" x="232.25545" y="326.0" vx="5.2493696" vy="0.0"/>
+		<mass id="m3" x="410.74457" y="326.0" vx="-5.2493696" vy="0.0"/>
+		<mass id="m4" x="155.52364" y="276.0" vx="0.029680803" vy="0.0"/>
+		<mass id="m5" x="485.47638" y="276.0" vx="-0.029680803" vy="0.0"/>
+		<mass id="m6" x="393.80444" y="216.0" vx="5.35355" vy="0.0"/>
+		<mass id="m7" x="241.19557" y="216.0" vx="-5.35355" vy="0.0"/>
+	</nodes>
+
+	<links>
+		<muscle a="m0" b="m1" restlength="166.0" amplitude="1.0" phase="0.0"/>
+		<muscle a="m2" b="m3" restlength="163.0" amplitude="1.0" phase="0.2509804"/>
+		<muscle a="m4" b="m5" restlength="165.0" amplitude="1.0" phase="0.49803922"/>
+		<muscle a="m6" b="m7" restlength="169.0" amplitude="1.0" phase="0.7490196"/>
+	</links>
+</model>

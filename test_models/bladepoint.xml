@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE sodaconstructor>
+<model>
+	<comment></comment>
+	<container width="830" height="542"/>
+	<environment gravity="0.0055900076" friction="0.017119398" springyness="0.43671936"/>
+	<collisions surface_friction="0.1" surface_reflection="-0.75"/>
+	<wave amplitude="0.20930232" phase="0.88862747" speed="0.0011764705"/>
+	<settings gravitydirection="down" wavedirection="forward" autoreverse="on"/>
+
+	<nodes>
+		<mass id="m0" x="460.6728" y="202.32823" vx="0.070880614" vy="0.03102601"/>
+		<mass id="m1" x="416.426" y="157.14212" vx="0.14950144" vy="-0.04059101"/>
+		<mass id="m2" x="372.175" y="111.97111" vx="0.23629653" vy="-0.11958726"/>
+		<mass id="m3" x="327.86432" y="66.79489" vx="0.3161864" vy="-0.19262737"/>
+		<mass id="m4" x="465.02988" y="197.83464" vx="0.3621125" vy="-0.2599614"/>
+		<mass id="m5" x="418.58658" y="154.90582" vx="0.2926315" vy="-0.1939634"/>
+		<mass id="m6" x="325.6973" y="69.02688" vx="0.15702744" vy="-0.04522903"/>
+		<mass id="m7" x="287.4946" y="205.95166" vx="0.2587967" vy="-0.09014468"/>
+		<mass id="m8" x="329.8216" y="158.94167" vx="0.25062287" vy="-0.103807695"/>
+		<mass id="m9" x="414.5294" y="64.98183" vx="0.21810946" vy="-0.13411956"/>
+		<mass id="m10" x="261.903" y="173.9034" vx="0.19190581" vy="-0.1753165"/>
+		<mass id="m11" x="317.09482" y="142.97856" vx="0.21304761" vy="-0.14831959"/>
+		<mass id="m12" x="427.3544" y="81.00383" vx="0.23848578" vy="-0.09203078"/>
+		<mass id="m13" x="539.6616" y="0.0" vx="6.189219E-5" vy="0.006790679"/>
+		<mass id="m14" x="199.97559" y="7.1783104" vx="0.5719861" vy="-0.22863281"/>
+		<mass id="m15" x="129.13095" y="0.0" vx="-0.0040859706" vy="0.011689813"/>
+		<mass id="m16" x="636.45905" y="62.751003" vx="0.42484987" vy="-0.18678686"/>
+	</nodes>
+
+	<links>
+		<spring a="m1" b="m0" restlength="0.0"/>
+		<spring a="m2" b="m1" restlength="0.0"/>
+		<spring a="m3" b="m2" restlength="0.0"/>
+		<spring a="m3" b="m0" restlength="253.0"/>
+		<spring a="m5" b="m4" restlength="0.0"/>
+		<spring a="m5" b="m2" restlength="0.0"/>
+		<spring a="m6" b="m2" restlength="0.0"/>
+		<spring a="m4" b="m6" restlength="253.0"/>
+		<spring a="m8" b="m7" restlength="0.0"/>
+		<spring a="m8" b="m2" restlength="0.0"/>
+		<spring a="m9" b="m2" restlength="0.0"/>
+		<spring a="m7" b="m9" restlength="253.0"/>
+		<spring a="m11" b="m10" restlength="0.0"/>
+		<spring a="m11" b="m2" restlength="0.0"/>
+		<spring a="m12" b="m2" restlength="0.0"/>
+		<spring a="m10" b="m12" restlength="253.0"/>
+		<spring a="m13" b="m0" restlength="217.23953"/>
+		<spring a="m7" b="m14" restlength="217.22942"/>
+		<spring a="m15" b="m10" restlength="218.74866"/>
+		<spring a="m4" b="m16" restlength="218.24338"/>
+		<muscle a="m9" b="m6" restlength="95.80934" amplitude="0.52380955" phase="0.5019608"/>
+		<muscle a="m3" b="m12" restlength="93.91537" amplitude="0.52380955" phase="0.0"/>
+		<muscle a="m1" b="m13" restlength="217.65344" amplitude="0.52380955" phase="0.7529412"/>
+		<muscle a="m8" b="m14" restlength="217.64836" amplitude="0.52380955" phase="0.7529412"/>
+		<muscle a="m11" b="m15" restlength="218.11024" amplitude="0.52380955" phase="0.2509804"/>
+		<muscle a="m5" b="m16" restlength="218.35635" amplitude="0.52380955" phase="0.2509804"/>
+	</links>
+</model>
