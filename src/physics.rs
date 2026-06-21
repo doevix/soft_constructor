@@ -1,6 +1,8 @@
 use crate::v2d::V2D;
 
-const SIM_SPEED_MULTIPLIER: f64 = 300.0;
+const GRAVITY_TUNE: f64 = 0.25;
+const SPRINGING_TUNE: f64 = 0.25;
+const WAVESPEED_TUNE: f64 = 2.0;
 
 pub enum WaveDirection {
     Forward,
@@ -10,6 +12,7 @@ pub enum WaveDirection {
 pub enum GravityDirection {
     Down,
     Up,
+    Off,
 }
 
 #[derive(PartialEq, Eq)]
@@ -42,6 +45,7 @@ impl World {
             gravity_direction: match gravity_direction {
                 GravityDirection::Down => -1.0,
                 GravityDirection::Up => 1.0,
+                GravityDirection::Off => 0.0,
             }
         }
     }
@@ -72,8 +76,8 @@ impl Wave {
             WaveDirection::Reverse => -1.0,
         }
     }
-    pub fn step(&mut self, dt: f64) {
-        self.angle += self.speed * self.direction * dt;
+    pub fn step(&mut self) {
+        self.angle += self.speed * self.direction * WAVESPEED_TUNE;
     }
     pub fn output(&self, sense: f64, phase: f64) -> f64 {
         1.0 + sense * self.amplitude * (self.angle + phase).sin()
@@ -193,7 +197,7 @@ impl Model {
             let b = &self.masses[spring.b];
             let ab = b.pos - a.pos;
             let l = ab.mag();
-            let f_spr = (ab / l) * (l - spring.restlength) * springyness;
+            let f_spr = (ab / l) * (l - spring.restlength) * springyness * SPRINGING_TUNE;
 
             self.masses[spring.a].force += f_spr;
             self.masses[spring.b].force -= f_spr;
@@ -201,15 +205,15 @@ impl Model {
     }
     fn env_affect(&mut self, world: World) {
         for mass in &mut self.masses {
-            mass.force.y += world.gravity * world.gravity_direction;
+            mass.force.y += world.gravity * world.gravity_direction * GRAVITY_TUNE;
         }
     }
-    fn wave_step(&mut self, wave: &mut Wave, dt: f64) {
+    fn wave_step(&mut self, wave: &mut Wave) {
         for muscle in &mut self.muscles {
             self.springs[muscle.spring_idx].restlength = muscle.acted_length(*wave);
         }
 
-        wave.step(dt);
+        wave.step();
     }
     fn capture_last(&mut self) {
         for mass in &mut self.masses {
@@ -217,8 +221,7 @@ impl Model {
         }
     }
 
-    pub fn step(&mut self, wave: &mut Wave, world: World, dt: f64) {
-        let delta = dt * SIM_SPEED_MULTIPLIER;
+    pub fn step(&mut self, wave: &mut Wave, world: World) {
         self.capture_last();
         self.clear_forces();
         self.springing(world.springyness);
@@ -227,17 +230,14 @@ impl Model {
 
         // Euler integrator.
         for mass in &mut self.masses {
-            // Force acceleration.
-            mass.vel += mass.force * delta;
-
-            // Environment friction.
-            mass.vel *= 1.0 - world.friction;
-
+            // force acceleration.
+            mass.vel += mass.force;
 
             // Boundary corrections and surface collisions.
             let detect_tol = 1e-6;
-            // Left and right walls.
-            if mass.pos.x < 0.0 + detect_tol {
+            let vel_tol = 1e-6;
+            // Left wall.
+            if mass.pos.x < 0.0 + detect_tol && mass.vel.x < 0.0 {
                 mass.pos.x = 0.0;
                 mass.vel.x *= -world.surface_reflection;
                 mass.vel.y *= world.surface_friction;
@@ -245,7 +245,8 @@ impl Model {
                     wave.direction *= -1.0;
                     self.last_wall_hit = WallHit::Left;
                 }
-            } else if mass.pos.x > world.width - detect_tol {
+            // Right wall.
+            } else if mass.pos.x > world.width - detect_tol && mass.vel.x > 0.0 {
                 mass.pos.x = world.width;
                 mass.vel.x *= -world.surface_reflection;
                 mass.vel.y *= world.surface_friction;
@@ -255,22 +256,27 @@ impl Model {
                 }
             }
 
-            // Floor and ceiling.
-            if mass.pos.y < 0.0 + detect_tol {
+            // Floor.
+            if mass.pos.y < 0.0 + detect_tol && mass.vel.y < 0.0 + vel_tol && mass.vel.y < 0.0 {
                 mass.pos.y = 0.0;
                 mass.vel.y *= -world.surface_reflection;
                 mass.vel.x *= world.surface_friction;
-            } else if mass.pos.y > world.height {
-                mass.pos.y = world.height - detect_tol;
+            // Ceiling.
+            } else if mass.pos.y > world.height - detect_tol && mass.vel.y > 0.0 {
+                mass.pos.y = world.height;
                 mass.vel.y *= -world.surface_reflection;
                 mass.vel.x *= world.surface_friction;
             }
 
-            // Inertia velocity
-            mass.pos += mass.vel * delta;
+            // Environment friction.
+            mass.vel *= 1.0 - world.friction;
+
+            // Inertia velocity.
+            mass.pos += mass.vel;
+
         }
 
-        self.wave_step(wave, delta);
+        self.wave_step(wave);
     }
 }
 

@@ -3,10 +3,10 @@
 <model>
 	<comment></comment>
 	<container width="830" height="542"/>
-	<environment gravity="0.0" friction="0.0105686085" springyness="0.5"/>
+	<environment gravity="0.1" friction="0.0105686085" springyness="0.5"/>
 	<collisions surface_friction="0.1" surface_reflection="-0.75"/>
 	<wave amplitude="1.0" phase="0.23529412" speed="0.009803922"/>
-	<settings gravitydirection="off" wavedirection="forward" autoreverse="on"/>
+	<settings gravitydirection="down" wavedirection="forward" autoreverse="on"/>
 
 	<nodes>
 		<mass id="m0" x="323.9427" y="376.0" vx="0.53110784" vy="0.0"/>

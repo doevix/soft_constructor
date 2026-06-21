@@ -3,7 +3,7 @@
 <model>
 	<comment></comment>
 	<container width="830" height="542"/>
-	<environment gravity="0.0055900076" friction="0.017119398" springyness="0.43671936"/>
+	<environment gravity="0.0055900076" friction="0.02" springyness="0.43671936"/>
 	<collisions surface_friction="0.1" surface_reflection="-0.75"/>
 	<wave amplitude="0.20930232" phase="0.88862747" speed="0.0011764705"/>
 	<settings gravitydirection="down" wavedirection="forward" autoreverse="on"/>

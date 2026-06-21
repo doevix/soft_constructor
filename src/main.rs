@@ -12,7 +12,7 @@ use eframe::epaint::{ CornerRadiusF32, Stroke };
 use crate::physics::{ GravityDirection, Mass, Model, Spring, Wave, WaveDirection, World };
 
 
-const FIXED_DT: f64 = 0.001;
+const TICKS_PER_SEC: f64 = 300.0;
 
 /*
  * Notes on sodaplay values:
@@ -26,7 +26,7 @@ const FIXED_DT: f64 = 0.001;
  */
 
 fn main() {
-    let model_data_res = model_io::Loader::load("daintywalker.xml");
+    let model_data_res = model_io::Loader::load("test_models/bladepoint.xml");
 
     let loaded = if let Ok(model_data) = model_data_res {
         let mut model = Model::new();
@@ -50,13 +50,17 @@ fn main() {
             model.attach_muscle(spring_count - 1, muscle_dat.amplitude, TAU * muscle_dat.phase);
         }
 
-        let gravity_direction = if model_data.settings.gravitydirection == "up" { GravityDirection::Up } else { GravityDirection::Down };
+        let gravity_direction =
+            if model_data.settings.gravitydirection == "up" { GravityDirection::Up }
+            else if model_data.settings.gravitydirection == "down" { GravityDirection::Down }
+            else { GravityDirection::Off };
         let world = World::new(
             model_data.container.width, model_data.container.height,
             model_data.environment.gravity, model_data.environment.friction, model_data.environment.springyness,
             model_data.collisions.surface_reflection.abs(), model_data.collisions.surface_friction, gravity_direction
         );
         let autoreverse = if model_data.settings.autoreverse == "on" { true } else { false };
+        // The wave direction is backwards in sodaconstructor.
         let wave_direction = if model_data.settings.wavedirection == "forward" { WaveDirection::Reverse} else { WaveDirection::Forward };
         let wave = Wave::new(model_data.wave.amplitude, model_data.wave.speed, model_data.wave.phase, autoreverse, wave_direction);
 
@@ -84,6 +88,7 @@ struct ConstructorApp {
     pub model: Model,
     pub world: World,
     pub wave: Wave,
+    pub acc: f64,
 }
 
 impl ConstructorApp {
@@ -91,7 +96,8 @@ impl ConstructorApp {
         Self {
             last_frame: 0.0,
             t_now: Instant::now(),
-            model, world, wave
+            model, world, wave,
+            acc: 0.0,
         }
     }
     pub fn to_panel(&self, v2_in: V2D) -> Pos2 {
@@ -124,12 +130,13 @@ impl eframe::App for ConstructorApp {
             self.last_frame = t_elapsed.as_secs_f64();
             self.t_now = Instant::now();
 
-            let mut acc = self.last_frame;
-            while acc >= FIXED_DT {
-                self.model.step(&mut self.wave, self.world, FIXED_DT);
-                acc -= FIXED_DT;
+            self.acc += self.last_frame.min(0.25);
+            let tick_interval = TICKS_PER_SEC.recip();
+            while self.acc >= tick_interval {
+                self.model.step(&mut self.wave, self.world);
+                self.acc -= tick_interval;
             }
-            let alpha = acc / FIXED_DT;
+            let alpha = self.acc / tick_interval;
 
             ui.request_repaint();
 
