@@ -162,7 +162,7 @@ impl eframe::App for ConstructorApp {
             ];
 
             ui.horizontal(|ui| {
-                ui.columns(3, |columns| {
+                ui.columns(4, |columns| {
                     ComboBox::new("Simulation", "")
                     .width(columns[0].available_width())
                     .selected_text(sim_selects.iter().find(|(sim, _)| self.sim_state == *sim ).unwrap().1)
@@ -178,6 +178,9 @@ impl eframe::App for ConstructorApp {
                     ComboBox::new("Gravity", "")
                     .width(columns[2].available_width())
                     .show_ui(&mut columns[2], |ui| {});
+                    ComboBox::new("Surface", "")
+                    .width(columns[3].available_width())
+                    .show_ui(&mut columns[3], |ui| {});
                 });
             });
 
