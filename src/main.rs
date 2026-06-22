@@ -26,7 +26,26 @@ const TICKS_PER_SEC: f64 = 300.0;
  */
 
 fn main() {
-    let model_data_res = model_io::Loader::load("test_models/daintywalker.xml");
+    let loaded = load_model("test_models/daintywalker.xml");
+
+    let (model, world, wave) = match loaded {
+        Some((l_model, l_world, l_wave)) => { (l_model, l_world, l_wave) },
+        None => {
+            let empty_model = Model::new();
+            let empty_world= World::new(830.0, 542.0, 0.2, 0.2, 0.5, 0.75, 0.1, GravityDirection::Down);
+            let empty_wave = Wave::new(0.5, 0.1, 0.0, true, WaveDirection::Forward);
+
+            (empty_model, empty_world, empty_wave)
+        }
+    };
+
+    let native_options = eframe::NativeOptions::default();
+    let _ = eframe::run_native("Soft Constructor", native_options, Box::new(|cc| Ok(Box::new(ConstructorApp::new(cc, model, world, wave)))));
+}
+
+fn load_model(filename: &str) -> Option<(Model, World, Wave)> {
+
+    let model_data_res = model_io::Loader::load(filename);
 
     let loaded = if let Ok(model_data) = model_data_res {
         let mut model = Model::new();
@@ -67,19 +86,7 @@ fn main() {
         Some((model, world, wave))
     } else { None };
 
-    let (model, world, wave) = match loaded {
-        Some((l_model, l_world, l_wave)) => { (l_model, l_world, l_wave) },
-        None => {
-            let empty_model = Model::new();
-            let empty_world= World::new(830.0, 542.0, 0.2, 0.2, 0.5, 0.75, 0.1, GravityDirection::Down);
-            let empty_wave = Wave::new(0.5, 0.1, 0.0, true, WaveDirection::Forward);
-
-            (empty_model, empty_world, empty_wave)
-        }
-    };
-
-    let native_options = eframe::NativeOptions::default();
-    let _ = eframe::run_native("Soft Constructor", native_options, Box::new(|cc| Ok(Box::new(ConstructorApp::new(cc, model, world, wave)))));
+    loaded
 }
 
 struct ConstructorApp {
@@ -113,13 +120,14 @@ impl eframe::App for ConstructorApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         egui::Panel::top("menu").show_inside(ui, |ui| {
             MenuBar::new().ui(ui, |ui| {
-                ui.menu_button("File", |ui| {});
-                if ui.button("Load").clicked() {
+                ui.menu_button("File", |ui| {
+                    if ui.button("Load").clicked() {
 
-                }
-                if ui.button("Quit").clicked() {
-                    ui.send_viewport_cmd(egui::ViewportCommand::Close);
-                }
+                    }
+                    if ui.button("Quit").clicked() {
+                        ui.send_viewport_cmd(egui::ViewportCommand::Close);
+                    }
+                });
             });
         });
         egui::Panel::bottom("info").show_inside(ui, |ui| {
