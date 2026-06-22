@@ -6,7 +6,7 @@ use std::f64::consts::TAU;
 use std::{time::Instant};
 
 use v2d::V2D;
-use eframe::egui::{self, MenuBar, Color32, Rect, Pos2 };
+use eframe::egui::{self, Color32, MenuBar, Pos2, Rect, Vec2 };
 use eframe::epaint::{ CornerRadiusF32, Stroke };
 
 use crate::physics::{ GravityDirection, Mass, Model, Spring, Wave, WaveDirection, World };
@@ -26,7 +26,7 @@ const TICKS_PER_SEC: f64 = 300.0;
  */
 
 fn main() {
-    let model_data_res = model_io::Loader::load("test_models/bladepoint.xml");
+    let model_data_res = model_io::Loader::load("test_models/daintywalker.xml");
 
     let loaded = if let Ok(model_data) = model_data_res {
         let mut model = Model::new();
@@ -100,10 +100,11 @@ impl ConstructorApp {
             acc: 0.0,
         }
     }
-    pub fn to_panel(&self, v2_in: V2D) -> Pos2 {
+    pub fn to_panel(&self, scale: f32, rect: Rect, v2_in: V2D) -> Pos2 {
+
         Pos2 {
-            x: v2_in.x as f32,
-            y: (self.world.height - v2_in.y) as f32
+            x: v2_in.x as f32 * scale + rect.min.x,
+            y: (self.world.height - v2_in.y) as f32 * scale + rect.min.y,
         }
     }
 }
@@ -143,24 +144,52 @@ impl eframe::App for ConstructorApp {
             let bg_color = Color32::from_gray(255);
             let mass_color = Color32::from_gray(0);
             let spring_color = Color32::from_gray(0);
-            let spring_style = Stroke::new(1.0, spring_color);
+            let empty_area_color = Color32::from_gray(128);
 
-            let model_area = Rect::from_min_max(Pos2::new(0.0, 0.0), Pos2::new(self.world.width as f32, self.world.height as f32));
-            ui.painter().rect_filled(model_area, CornerRadiusF32::same(0.0), bg_color);
 
-            let painter = ui.painter_at(model_area);
+            let panel_area = ui.max_rect();
+
+            let rect_sz = panel_area.size();
+            let (scaled_area, scale) = if self.world.width > self.world.height {
+                let mut scale = rect_sz.x / (self.world.width as f32);
+                let mut centered = Vec2::new(rect_sz.x, self.world.height as f32 * scale);
+                if self.world.height as f32 * scale > rect_sz.y {
+                    scale = rect_sz.y / (self.world.height as f32);
+                    centered = Vec2::new(self.world.width as f32 * scale, rect_sz.y);
+                }
+                (centered, scale)
+            } else {
+                let mut scale = rect_sz.y / (self.world.height as f32);
+                let mut centered = Vec2::new(self.world.width as f32 * scale, rect_sz.y);
+                if self.world.width as f32 * scale > rect_sz.x {
+                    scale = rect_sz.x / (self.world.width as f32);
+                    centered = Vec2::new(rect_sz.x, (self.world.height as f32) * scale);
+                }
+                (centered, scale)
+            };
+
+            let center_offset = Vec2::new((panel_area.width() - scaled_area.x) / 2.0, (panel_area.height() - scaled_area.y) / 2.0);
+            let centered_min = panel_area.min + center_offset;
+            let centered_rect = Rect::from_min_size(centered_min, scaled_area);
+
+            ui.painter().rect_filled(panel_area, CornerRadiusF32::same(0.0), empty_area_color);
+            ui.painter().rect_filled(centered_rect, CornerRadiusF32::same(0.0), bg_color);
+
+            let painter = ui.painter_at(centered_rect);
             for spring in self.model.get_springs() {
+            let spring_style = Stroke::new(1.0, spring_color);
                 let m1 = self.model.get_mass(spring.a);
                 let m2 = self.model.get_mass(spring.b);
 
-                let p1 = self.to_panel(m1.approx_pos(alpha));
-                let p2 = self.to_panel(m2.approx_pos(alpha));
+                let p1 = self.to_panel(scale, centered_rect, m1.approx_pos(alpha));
+                let p2 = self.to_panel(scale, centered_rect, m2.approx_pos(alpha));
 
                 painter.line_segment([p1, p2], spring_style);
             }
+
             for mass in self.model.get_masses() {
-                let pos = self.to_panel(mass.approx_pos(alpha));
-                let rad: f32 = 2.5;
+                let pos = self.to_panel(scale, centered_rect, mass.approx_pos(alpha));
+                let rad: f32 = 2.5 * scale;
                 painter.circle_filled(pos, rad, mass_color);
             }
 
