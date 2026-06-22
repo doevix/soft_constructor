@@ -160,70 +160,77 @@ impl eframe::App for ConstructorApp {
                     }
                 });
                 egui::widgets::global_theme_preference_buttons(ui);
-            });
 
-            let sim_selects = [
-                (SimulationState::Simulate, "simulate"),
-                (SimulationState::Construct, "construct"),
-                (SimulationState::Delete, "delete"),
-                (SimulationState::ClearAll, "clear all"),
-            ];
+                let sim_selects = [
+                    (SimulationState::Simulate, "simulate"),
+                    (SimulationState::Construct, "construct"),
+                    (SimulationState::Delete, "delete"),
+                    (SimulationState::ClearAll, "clear all"),
+                ];
 
-            let wave_selects = [
-                (WaveUserState::AutoReverse, "auto reverse"),
-                (WaveUserState::Forward, "forward"),
-                (WaveUserState::Reverse, "reverse"),
-                (WaveUserState::Manual, "manual"),
-            ];
+                let wave_selects = [
+                    (WaveUserState::AutoReverse, "auto reverse"),
+                    (WaveUserState::Forward, "forward"),
+                    (WaveUserState::Reverse, "reverse"),
+                    (WaveUserState::Manual, "manual"),
+                ];
 
-            let gravity_selects = [
-                (GravityDirection::Down, "gravity on"),
-                (GravityDirection::Off, "gravity off"),
-                (GravityDirection::Up, "gravity reverse"),
-            ];
+                let gravity_selects = [
+                    (GravityDirection::Down, "gravity on"),
+                    (GravityDirection::Off, "gravity off"),
+                    (GravityDirection::Up, "gravity reverse"),
+                ];
 
-            let mut current_gravity_dir = if self.world.gravity_direction < 0.0 {
-                GravityDirection::Down
-            } else if self.world.gravity_direction > 0.0 {
-                GravityDirection::Up
-            } else {
-                GravityDirection::Off
-            };
+                let mut current_gravity_dir = if self.world.gravity_direction < 0.0 {
+                    GravityDirection::Down
+                } else if self.world.gravity_direction > 0.0 {
+                    GravityDirection::Up
+                } else {
+                    GravityDirection::Off
+                };
 
-            let surface_selects = [
-                (SurfaceSticky::Sticky, "sticky"),
-                (SurfaceSticky::Slippy, "slippery"),
-            ];
+                let surface_selects = [
+                    (SurfaceSticky::Sticky, "sticky"),
+                    (SurfaceSticky::Slippy, "slippery"),
+                ];
+                let mut current_surface = self.world.stickyness;
 
-            ui.horizontal(|ui| {
-                ui.columns(4, |columns| {
-                    ComboBox::new("Simulation", "")
-                    .width(columns[0].available_width())
-                    .selected_text(sim_selects.iter().find(|(sim, _)| self.sim_state == *sim ).unwrap().1)
-                    .show_ui(&mut columns[0], |ui| {
-                        ui.selectable_value(&mut self.sim_state, SimulationState::Simulate, "simulate");
-                        ui.selectable_value(&mut self.sim_state, SimulationState::Construct, "construct");
-                        ui.selectable_value(&mut self.sim_state, SimulationState::Delete, "delete");
-                        ui.selectable_value(&mut self.sim_state, SimulationState::ClearAll, "clear all");
+                ui.horizontal(|ui| {
+                    ui.columns(4, |columns| {
+                        ComboBox::new("Simulation", "")
+                        .width(columns[0].available_width())
+                        .selected_text(sim_selects.iter().find(|(sim, _)| self.sim_state == *sim ).unwrap().1)
+                        .show_ui(&mut columns[0], |ui| {
+                            ui.selectable_value(&mut self.sim_state, SimulationState::Simulate, "simulate");
+                            ui.selectable_value(&mut self.sim_state, SimulationState::Construct, "construct");
+                            ui.selectable_value(&mut self.sim_state, SimulationState::Delete, "delete");
+                            ui.selectable_value(&mut self.sim_state, SimulationState::ClearAll, "clear all");
+                        });
+                        ComboBox::new("Wave", "")
+                        .width(columns[1].available_width())
+                        .show_ui(&mut columns[1], |ui| {});
+
+                        ComboBox::new("Gravity", "")
+                        .width(columns[2].available_width())
+                        .selected_text(gravity_selects.iter().find(|(grav, _)| current_gravity_dir == *grav).unwrap().1)
+                        .show_ui(&mut columns[2], |ui| {
+                            ui.selectable_value(&mut current_gravity_dir, GravityDirection::Down, "gravity on");
+                            ui.selectable_value(&mut current_gravity_dir, GravityDirection::Off, "gravity off");
+                            ui.selectable_value(&mut current_gravity_dir, GravityDirection::Up, "gravity reverse");
+                        });
+                        self.world.set_gravity_dir(current_gravity_dir);
+                        ComboBox::new("Surface", "")
+                        .width(columns[3].available_width())
+                        .selected_text(surface_selects.iter().find(|(surface, _)| current_surface == *surface).unwrap().1)
+                        .show_ui(&mut columns[3], |ui| {
+                            ui.selectable_value(&mut current_surface, SurfaceSticky::Sticky, "sticky");
+                            ui.selectable_value(&mut current_surface, SurfaceSticky::Slippy, "slippery");
+                        });
+                        self.world.set_stickyness(current_surface);
                     });
-                    ComboBox::new("Wave", "")
-                    .width(columns[1].available_width())
-                    .show_ui(&mut columns[1], |ui| {});
-
-                    ComboBox::new("Gravity", "")
-                    .width(columns[2].available_width())
-                    .selected_text(gravity_selects.iter().find(|(grav, _)| current_gravity_dir == *grav).unwrap().1)
-                    .show_ui(&mut columns[2], |ui| {
-                        ui.selectable_value(&mut current_gravity_dir, GravityDirection::Down, "gravity on");
-                        ui.selectable_value(&mut current_gravity_dir, GravityDirection::Off, "gravity off");
-                        ui.selectable_value(&mut current_gravity_dir, GravityDirection::Up, "gravity reverse");
-                    });
-                    self.world.set_gravity_dir(current_gravity_dir);
-                    ComboBox::new("Surface", "")
-                    .width(columns[3].available_width())
-                    .show_ui(&mut columns[3], |ui| {});
                 });
             });
+
 
         });
         egui::Panel::bottom("info").show_inside(ui, |ui| {

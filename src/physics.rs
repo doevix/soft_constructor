@@ -56,7 +56,7 @@ impl World {
                 GravityDirection::Up => 1.0,
                 GravityDirection::Off => 0.0,
             },
-            stickyness: if surface_friction == 0.0 { SurfaceSticky::Slippy } else { SurfaceSticky::Sticky },
+            stickyness: if surface_friction == 1.0 { SurfaceSticky::Slippy } else { SurfaceSticky::Sticky },
         }
     }
     pub fn set_stickyness(&mut self, stickyness: SurfaceSticky) {
@@ -66,7 +66,7 @@ impl World {
                 self.stickyness = SurfaceSticky::Sticky;
             },
             SurfaceSticky::Slippy => {
-                self.surface_friction = 0.0;
+                self.surface_friction = 1.0;
                 self.stickyness = SurfaceSticky::Slippy;
             }
         }
