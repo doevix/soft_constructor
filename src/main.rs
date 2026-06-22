@@ -8,6 +8,7 @@ use std::{time::Instant};
 use v2d::V2D;
 use eframe::egui::{self, Color32, MenuBar, Pos2, Rect, Vec2 };
 use eframe::epaint::{ CornerRadiusF32, Stroke };
+use rfd::FileDialog;
 
 use crate::physics::{ GravityDirection, Mass, Model, Spring, Wave, WaveDirection, World };
 
@@ -122,7 +123,19 @@ impl eframe::App for ConstructorApp {
             MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Load").clicked() {
+                        let files = FileDialog::new()
+                        .add_filter("text", &["txt", "xml"])
+                        .add_filter("xml", &["txt", "xml"])
+                        .pick_file();
 
+                        if let Some(file) = files {
+                            let filename = file.to_str().unwrap_or("");
+                            let loaded = load_model(filename);
+                            if let Some(to_load) = loaded {
+                                (self.model, self.world, self.wave) = to_load;
+                                self.acc = 0.0;
+                            }
+                        }
                     }
                     if ui.button("Quit").clicked() {
                         ui.send_viewport_cmd(egui::ViewportCommand::Close);
