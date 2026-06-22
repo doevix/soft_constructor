@@ -7,6 +7,7 @@ const WAVESPEED_TUNE: f64 = 2.0;
 pub enum WaveDirection {
     Forward,
     Reverse,
+    Manual,
 }
 
 pub enum GravityDirection {
@@ -67,6 +68,7 @@ impl Wave {
             direction: match direction {
                 WaveDirection::Forward => 1.0,
                 WaveDirection::Reverse => -1.0,
+                WaveDirection::Manual => 0.0,
             }
         }
     }
@@ -74,6 +76,7 @@ impl Wave {
         self.direction = match direction {
             WaveDirection::Forward => 1.0,
             WaveDirection::Reverse => -1.0,
+            WaveDirection::Manual => 0.0,
         }
     }
     pub fn step(&mut self) {

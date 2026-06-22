@@ -6,7 +6,7 @@ use std::f64::consts::TAU;
 use std::{time::Instant};
 
 use v2d::V2D;
-use eframe::egui::{self, Color32, MenuBar, Pos2, Rect, Vec2 };
+use eframe::egui::{self, Color32, MenuBar, Pos2, Rect, Vec2, ComboBox };
 use eframe::epaint::{ CornerRadiusF32, Stroke };
 use rfd::FileDialog;
 
@@ -25,6 +25,14 @@ const TICKS_PER_SEC: f64 = 300.0;
  * default amplitude 0.5
  * max wave speed = 0.1 which is weird.
  */
+
+#[derive(PartialEq, Eq)]
+enum SimulationState {
+    Simulate,
+    Construct,
+    Delete,
+    ClearAll,
+}
 
 fn main() {
     let loaded = load_model("test_models/daintywalker.xml");
@@ -97,6 +105,7 @@ struct ConstructorApp {
     pub world: World,
     pub wave: Wave,
     pub acc: f64,
+    pub sim_state: SimulationState,
 }
 
 impl ConstructorApp {
@@ -106,6 +115,7 @@ impl ConstructorApp {
             t_now: Instant::now(),
             model, world, wave,
             acc: 0.0,
+            sim_state: SimulationState::Simulate,
         }
     }
     pub fn to_panel(&self, scale: f32, rect: Rect, v2_in: V2D) -> Pos2 {
@@ -143,6 +153,34 @@ impl eframe::App for ConstructorApp {
                 });
                 egui::widgets::global_theme_preference_buttons(ui);
             });
+
+            let sim_selects = [
+                (SimulationState::Simulate, "simulate"),
+                (SimulationState::Construct, "construct"),
+                (SimulationState::Delete, "delete"),
+                (SimulationState::ClearAll, "clear all"),
+            ];
+
+            ui.horizontal(|ui| {
+                ui.columns(3, |columns| {
+                    ComboBox::new("Simulation", "")
+                    .width(columns[0].available_width())
+                    .selected_text(sim_selects.iter().find(|(sim, _)| self.sim_state == *sim ).unwrap().1)
+                    .show_ui(&mut columns[0], |ui| {
+                        ui.selectable_value(&mut self.sim_state, SimulationState::Simulate, "simulate");
+                        ui.selectable_value(&mut self.sim_state, SimulationState::Construct, "construct");
+                        ui.selectable_value(&mut self.sim_state, SimulationState::Delete, "delete");
+                        ui.selectable_value(&mut self.sim_state, SimulationState::ClearAll, "clear all");
+                    });
+                    ComboBox::new("Wave", "")
+                    .width(columns[1].available_width())
+                    .show_ui(&mut columns[1], |ui| {});
+                    ComboBox::new("Gravity", "")
+                    .width(columns[2].available_width())
+                    .show_ui(&mut columns[2], |ui| {});
+                });
+            });
+
         });
         egui::Panel::bottom("info").show_inside(ui, |ui| {
             let disp_frame_time = format!("{:.2?} Hz", self.last_frame.recip());
