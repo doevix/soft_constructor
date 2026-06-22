@@ -10,7 +10,7 @@ use eframe::egui::{self, Color32, MenuBar, Pos2, Rect, Vec2, ComboBox };
 use eframe::epaint::{ CornerRadiusF32, Stroke };
 use rfd::FileDialog;
 
-use crate::physics::{ GravityDirection, Mass, Model, Spring, Wave, WaveDirection, World };
+use crate::physics::{ GravityDirection, Mass, Model, Spring, SurfaceSticky, Wave, WaveDirection, World };
 
 
 const TICKS_PER_SEC: f64 = 300.0;
@@ -32,6 +32,14 @@ enum SimulationState {
     Construct,
     Delete,
     ClearAll,
+}
+
+#[derive(PartialEq, Eq)]
+enum WaveUserState {
+    AutoReverse,
+    Forward,
+    Reverse,
+    Manual,
 }
 
 fn main() {
@@ -161,6 +169,32 @@ impl eframe::App for ConstructorApp {
                 (SimulationState::ClearAll, "clear all"),
             ];
 
+            let wave_selects = [
+                (WaveUserState::AutoReverse, "auto reverse"),
+                (WaveUserState::Forward, "forward"),
+                (WaveUserState::Reverse, "reverse"),
+                (WaveUserState::Manual, "manual"),
+            ];
+
+            let gravity_selects = [
+                (GravityDirection::Down, "gravity on"),
+                (GravityDirection::Off, "gravity off"),
+                (GravityDirection::Up, "gravity reverse"),
+            ];
+
+            let mut current_gravity_dir = if self.world.gravity_direction < 0.0 {
+                GravityDirection::Down
+            } else if self.world.gravity_direction > 0.0 {
+                GravityDirection::Up
+            } else {
+                GravityDirection::Off
+            };
+
+            let surface_selects = [
+                (SurfaceSticky::Sticky, "sticky"),
+                (SurfaceSticky::Slippy, "slippery"),
+            ];
+
             ui.horizontal(|ui| {
                 ui.columns(4, |columns| {
                     ComboBox::new("Simulation", "")
@@ -175,9 +209,16 @@ impl eframe::App for ConstructorApp {
                     ComboBox::new("Wave", "")
                     .width(columns[1].available_width())
                     .show_ui(&mut columns[1], |ui| {});
+
                     ComboBox::new("Gravity", "")
                     .width(columns[2].available_width())
-                    .show_ui(&mut columns[2], |ui| {});
+                    .selected_text(gravity_selects.iter().find(|(grav, _)| current_gravity_dir == *grav).unwrap().1)
+                    .show_ui(&mut columns[2], |ui| {
+                        ui.selectable_value(&mut current_gravity_dir, GravityDirection::Down, "gravity on");
+                        ui.selectable_value(&mut current_gravity_dir, GravityDirection::Off, "gravity off");
+                        ui.selectable_value(&mut current_gravity_dir, GravityDirection::Up, "gravity reverse");
+                    });
+                    self.world.set_gravity_dir(current_gravity_dir);
                     ComboBox::new("Surface", "")
                     .width(columns[3].available_width())
                     .show_ui(&mut columns[3], |ui| {});

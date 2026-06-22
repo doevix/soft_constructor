@@ -10,6 +10,7 @@ pub enum WaveDirection {
     Manual,
 }
 
+#[derive(PartialEq, Eq)]
 pub enum GravityDirection {
     Down,
     Up,
@@ -23,6 +24,12 @@ pub enum WallHit {
     Right
 }
 
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
+pub enum SurfaceSticky {
+    #[default]
+    Sticky,
+    Slippy,
+}
 
 #[derive(Clone, Copy, Default, Debug)]
 pub struct World {
@@ -31,6 +38,7 @@ pub struct World {
     pub springyness: f64,
     pub surface_friction: f64,
     pub surface_reflection: f64,
+    pub stickyness: SurfaceSticky,
     pub width: f64,
     pub height: f64,
 
@@ -47,7 +55,27 @@ impl World {
                 GravityDirection::Down => -1.0,
                 GravityDirection::Up => 1.0,
                 GravityDirection::Off => 0.0,
+            },
+            stickyness: if surface_friction == 0.0 { SurfaceSticky::Slippy } else { SurfaceSticky::Sticky },
+        }
+    }
+    pub fn set_stickyness(&mut self, stickyness: SurfaceSticky) {
+        match stickyness {
+            SurfaceSticky::Sticky => {
+                self.surface_friction = 0.1;
+                self.stickyness = SurfaceSticky::Sticky;
+            },
+            SurfaceSticky::Slippy => {
+                self.surface_friction = 0.0;
+                self.stickyness = SurfaceSticky::Slippy;
             }
+        }
+    }
+    pub fn set_gravity_dir(&mut self, direction: GravityDirection) {
+        match direction {
+            GravityDirection::Down => self.gravity_direction = -1.0,
+            GravityDirection::Off => self.gravity_direction = 0.0,
+            GravityDirection::Up => self.gravity_direction = 1.0,
         }
     }
 }
