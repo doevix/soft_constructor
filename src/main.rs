@@ -177,7 +177,7 @@ impl eframe::App for ConstructorApp {
 
             let painter = ui.painter_at(centered_rect);
             for spring in self.model.get_springs() {
-            let spring_style = Stroke::new(1.0, spring_color);
+            let spring_style = Stroke::new(1.0 * scale, spring_color);
                 let m1 = self.model.get_mass(spring.a);
                 let m2 = self.model.get_mass(spring.b);
 
@@ -185,6 +185,16 @@ impl eframe::App for ConstructorApp {
                 let p2 = self.to_panel(scale, centered_rect, m2.approx_pos(alpha));
 
                 painter.line_segment([p1, p2], spring_style);
+            }
+
+            for muscle in self.model.get_muscles() {
+                let spring = self.model.get_spring(muscle.spring_idx);
+                let p1 = self.model.get_mass(spring.a).approx_pos(alpha);
+                let p2 = self.model.get_mass(spring.b).approx_pos(alpha);
+                let center = self.to_panel(scale, centered_rect, (p1 + p2) * 0.5);
+                let rad = 1.0 * scale;
+
+                painter.circle_filled(center, rad, mass_color);
             }
 
             for mass in self.model.get_masses() {

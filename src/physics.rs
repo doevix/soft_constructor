@@ -161,9 +161,17 @@ impl Model {
         &self.springs
     }
 
+    pub fn get_muscles(&self) -> &Vec<Muscle> {
+        &self.muscles
+    }
+
     pub fn get_mass(&self, idx: usize) -> Mass {
         self.masses[idx]
     }
+    pub fn get_spring(&self, idx: usize) -> Spring {
+        self.springs[idx]
+    }
+
 
     pub fn add_mass(&mut self, mass: Mass) -> usize {
         self.masses.push(mass);
