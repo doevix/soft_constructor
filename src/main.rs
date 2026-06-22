@@ -280,6 +280,11 @@ impl eframe::App for ConstructorApp {
             let disp_frame_time = format!("{:.2?} Hz", self.last_frame.recip());
             ui.label(disp_frame_time);
         });
+        egui::Panel::left("wave and settings").show_inside(ui, |ui| {
+            let themed_color_val = if ui.theme() == egui::Theme::Light { 255 } else { 16 };
+            let wave_bg_color = Color32::from_gray(themed_color_val);
+            ui.painter().rect_filled(ui.max_rect(), CornerRadiusF32::same(0.0), wave_bg_color);
+        });
         egui::CentralPanel::default().show_inside(ui, |ui| {
             let t_elapsed = self.t_now.elapsed();
             self.last_frame = t_elapsed.as_secs_f64();
