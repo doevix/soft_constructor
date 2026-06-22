@@ -175,6 +175,19 @@ impl eframe::App for ConstructorApp {
                     (WaveUserState::Manual, "manual"),
                 ];
 
+                let mut current_wave_mode = if self.wave.autoreverse {
+                    WaveUserState::AutoReverse
+                } else {
+                    // Remember that sodaplay's wave is backwards.
+                    if self.wave.direction > 0.0 {
+                        WaveUserState::Reverse
+                    } else if self.wave.direction < 0.0 {
+                        WaveUserState::Forward
+                    } else {
+                        WaveUserState::Manual
+                    }
+                };
+
                 let gravity_selects = [
                     (GravityDirection::Down, "gravity on"),
                     (GravityDirection::Off, "gravity off"),
@@ -197,6 +210,7 @@ impl eframe::App for ConstructorApp {
 
                 ui.horizontal(|ui| {
                     ui.columns(4, |columns| {
+                        // Simulation mode options.
                         ComboBox::new("Simulation", "")
                         .width(columns[0].available_width())
                         .selected_text(sim_selects.iter().find(|(sim, _)| self.sim_state == *sim ).unwrap().1)
@@ -206,10 +220,37 @@ impl eframe::App for ConstructorApp {
                             ui.selectable_value(&mut self.sim_state, SimulationState::Delete, "delete");
                             ui.selectable_value(&mut self.sim_state, SimulationState::ClearAll, "clear all");
                         });
+
+                        // Wave direction options.
                         ComboBox::new("Wave", "")
                         .width(columns[1].available_width())
-                        .show_ui(&mut columns[1], |ui| {});
+                        .selected_text(wave_selects.iter().find(|(wave, _)| current_wave_mode == *wave).unwrap().1)
+                        .show_ui(&mut columns[1], |ui| {
+                            ui.selectable_value(&mut current_wave_mode, WaveUserState::AutoReverse, "auto reverse");
+                            ui.selectable_value(&mut current_wave_mode, WaveUserState::Forward, "forward");
+                            ui.selectable_value(&mut current_wave_mode, WaveUserState::Reverse, "reverse");
+                            ui.selectable_value(&mut current_wave_mode, WaveUserState::Manual, "manual");
+                        });
 
+                        match current_wave_mode {
+                            WaveUserState::AutoReverse => {
+                                self.wave.autoreverse = true;
+                            },
+                            WaveUserState::Forward => {
+                                self.wave.autoreverse = false;
+                                self.wave.set_direction(WaveDirection::Forward);
+                            },
+                            WaveUserState::Reverse => {
+                                self.wave.autoreverse = false;
+                                self.wave.set_direction(WaveDirection::Reverse);
+                            },
+                            WaveUserState::Manual => {
+                                self.wave.autoreverse = false;
+                                self.wave.set_direction(WaveDirection::Manual);
+                            },
+                        }
+
+                        // Gravity direction options.
                         ComboBox::new("Gravity", "")
                         .width(columns[2].available_width())
                         .selected_text(gravity_selects.iter().find(|(grav, _)| current_gravity_dir == *grav).unwrap().1)
@@ -219,6 +260,8 @@ impl eframe::App for ConstructorApp {
                             ui.selectable_value(&mut current_gravity_dir, GravityDirection::Up, "gravity reverse");
                         });
                         self.world.set_gravity_dir(current_gravity_dir);
+
+                        // Surface friction options.
                         ComboBox::new("Surface", "")
                         .width(columns[3].available_width())
                         .selected_text(surface_selects.iter().find(|(surface, _)| current_surface == *surface).unwrap().1)
