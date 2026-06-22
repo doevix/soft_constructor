@@ -141,6 +141,7 @@ impl eframe::App for ConstructorApp {
                         ui.send_viewport_cmd(egui::ViewportCommand::Close);
                     }
                 });
+                egui::widgets::global_theme_preference_buttons(ui);
             });
         });
         egui::Panel::bottom("info").show_inside(ui, |ui| {
@@ -162,10 +163,14 @@ impl eframe::App for ConstructorApp {
 
             ui.request_repaint();
 
-            let bg_color = Color32::from_gray(255);
-            let mass_color = Color32::from_gray(0);
-            let spring_color = Color32::from_gray(0);
-            let empty_area_color = Color32::from_gray(128);
+            let t_value_elements = if ui.theme() == egui::Theme::Light { 0 } else { 128 };
+            let t_value_bg = if ui.theme() == egui::Theme::Light { 255 } else { 16 };
+            let t_value_empty = if ui.theme() == egui::Theme::Light { 128 } else { 0 };
+
+            let bg_color = Color32::from_gray(t_value_bg);
+            let mass_color = Color32::from_gray(t_value_elements);
+            let spring_color = Color32::from_gray(t_value_elements);
+            let empty_area_color = Color32::from_gray(t_value_empty);
 
 
             let panel_area = ui.max_rect();
