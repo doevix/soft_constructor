@@ -26,7 +26,7 @@ impl WaveBox {
         let n_points = 60;
         let mut point_coords: Vec<Pos2> = Vec::new();
         let y_div_len = area_rect.size().y / n_points as f32;
-        for point in 0..n_points {
+        for point in 0..n_points + 1 {
             let y_coord = point as f32 * y_div_len;
             let phase = TAU * y_coord / area_rect.size().y;
             let x_coord = wave.output(0.5 * area_rect.size().x as f64, phase as f64) as f32;
