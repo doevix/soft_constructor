@@ -289,7 +289,7 @@ impl eframe::App for ConstructorApp {
         .show_inside(ui, |ui| {
             let mut wave_area = ui.max_rect().clone();
             wave_area.max.y = 3.0 * wave_area.max.y / 4.0;
-            self.wavebox.draw(ui, wave_area, self.wave);
+            self.wavebox.draw(ui, wave_area, self.wave, self.model.get_muscles());
         });
         egui::CentralPanel::default().show_inside(ui, |ui| {
             let t_elapsed = self.t_now.elapsed();
