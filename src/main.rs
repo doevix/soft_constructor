@@ -2,16 +2,18 @@ pub mod v2d;
 pub mod physics;
 pub mod model_io;
 pub mod wavebox;
+pub mod slider_box;
 
 use std::f64::consts::TAU;
 use std::{time::Instant};
 
 use v2d::V2D;
-use eframe::egui::{self, Color32, MenuBar, Pos2, Rect, Vec2, ComboBox };
+use eframe::egui::{self, Color32, ComboBox, MenuBar, Pos2, Rect, UiBuilder, Vec2 };
 use eframe::epaint::{ CornerRadiusF32, Stroke };
 use rfd::FileDialog;
 
 use crate::physics::{ GravityDirection, Mass, Model, Spring, SurfaceSticky, Wave, WaveDirection, World };
+use crate::slider_box::SliderBox;
 use crate::wavebox::WaveBox;
 
 
@@ -134,6 +136,7 @@ struct ConstructorApp {
     pub acc: f64,
     pub sim_state: SimulationState,
     pub wavebox: WaveBox,
+    pub slider_box: SliderBox,
     pub rect_viewport: Rect,
 }
 
@@ -146,6 +149,7 @@ impl ConstructorApp {
             acc: 0.0,
             sim_state: SimulationState::Simulate,
             wavebox: WaveBox::init(),
+            slider_box: SliderBox::init(),
             rect_viewport: Rect::ZERO,
         }
     }
@@ -305,12 +309,29 @@ impl eframe::App for ConstructorApp {
         });
         egui::Panel::left("wave and settings")
         .exact_size(self.rect_viewport.width() * 0.12)
+        .max_size(150.0)
         .resizable(false)
         .show_inside(ui, |ui| {
             ui.vertical(|ui| {
-                let mut wave_area = ui.max_rect().clone();
-                wave_area.max.y = 3.0 * wave_area.max.y / 4.0;
+                let full_area = ui.max_rect();
+                let total_height = full_area.height();
+
+                let mut wave_area = full_area;
+                wave_area.max.y = wave_area.min.y + (3.0 * total_height / 4.0);
                 self.wavebox.draw(ui, wave_area, self.wave, self.model.get_muscles());
+
+                let mut rect_area = full_area;
+                rect_area.min.y = wave_area.max.y;
+                let r_ui = UiBuilder::new().max_rect(rect_area);
+                ui.scope_builder(r_ui, |ui| {
+                    self.slider_box.draw(ui, rect_area, self.world);
+                //     ui.columns(3, |columns| {
+                //         for col in columns {
+                //             let painter = col.painter_at(col.content_rect());
+                //             painter.rect_filled(col.content_rect(), CornerRadiusF32::ZERO, Color32::from_gray(128));
+                //         }
+                //     });
+                });
             });
         });
         egui::CentralPanel::default().show_inside(ui, |ui| {

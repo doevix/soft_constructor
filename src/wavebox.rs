@@ -84,7 +84,7 @@ impl WaveBox {
         // Draw the wave speed indicator.
         let wave_speed_factor = wave.speed as f32 / 0.1;
         let speed_height = wave_rect.size().y * wave_speed_factor;
-        let speed_indicator_rect = Rect::from_min_max(
+        let speed_indicator_rect = Rect::from_two_pos(
             area_rect.min,
             Pos2::new(wave_rect.min.x, wave_rect.min.y + speed_height)
         );
