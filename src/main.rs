@@ -69,11 +69,28 @@ fn load_model(filename: &str) -> Option<(Model, World, Wave)> {
     let loaded = if let Ok(model_data) = model_data_res {
         let mut model = Model::new();
 
+        let mut indexed_masses: Vec<(usize, Mass)> = Vec::new();
+
+        // Load fixed masses.
+        for node_dat in model_data.nodes.fixed_nodes {
+            let pos = V2D::new(node_dat.x, node_dat.y);
+            let vel = V2D::null();
+            let m = Mass::new(pos, vel, node_dat.id.fixed);
+            indexed_masses.push((node_dat.id.idx, m));
+        }
+
+        // Load free masses.
         for mass_dat in model_data.nodes.masses {
             let pos = V2D::new(mass_dat.x, mass_dat.y);
             let vel = V2D::new(mass_dat.vx, mass_dat.vy);
-            let m = Mass::new(pos, vel, false);
-            model.add_mass(m);
+            let m = Mass::new(pos, vel, mass_dat.id.fixed);
+            indexed_masses.push((mass_dat.id.idx, m));
+        }
+
+        indexed_masses.sort_by_key(|(idx, _)| *idx);
+
+        for (_, mass) in indexed_masses {
+            model.add_mass(mass);
         }
 
         for spring_dat in model_data.links.springs {
@@ -375,7 +392,11 @@ impl eframe::App for ConstructorApp {
             for mass in self.model.get_masses() {
                 let pos = self.to_panel(scale, centered_rect, mass.approx_pos(alpha));
                 let rad: f32 = 2.5 * scale;
-                painter.circle_filled(pos, rad, mass_color);
+                if !mass.fixed {
+                    painter.circle_filled(pos, rad, mass_color);
+                } else {
+                    painter.rect_filled(Rect::from_center_size(pos, Vec2::new(5.0, 5.0) * scale), CornerRadiusF32::ZERO, mass_color);
+                }
             }
 
         });

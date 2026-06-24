@@ -269,6 +269,8 @@ impl Model {
 
         // Euler integrator.
         for mass in &mut self.masses {
+            if mass.fixed { continue; }
+
             // force acceleration.
             mass.vel += mass.force;
 

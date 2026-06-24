@@ -7,10 +7,33 @@ fn deserialize_mass_id<'de, D>(deserializer: D) -> Result<usize, D::Error>
 where D: Deserializer<'de>,
 {
     let s: String = Deserialize::deserialize(deserializer)?;
-    s.strip_prefix('m')
-    .ok_or_else(|| serde::de::Error::custom(format!("expected id starting with 'm' got '{s}'")))?
-    .parse::<usize>()
-    .map_err(serde::de::Error::custom)
+    let stripped = s.strip_prefix('m').or_else(|| s.strip_prefix('n'))
+    .ok_or_else(|| serde::de::Error::custom(format!("expected id starting with 'm' or 'n' got '{s}'")))?;
+    stripped.parse::<usize>().map_err(serde::de::Error::custom)
+}
+
+#[derive(Serialize, Debug)]
+pub struct MassId {
+    pub idx: usize,
+    pub fixed: bool,
+}
+
+impl<'de> Deserialize<'de> for MassId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: Deserializer<'de>,
+    {
+        let s: String = Deserialize::deserialize(deserializer)?;
+        let (prefix, rest) = s.split_at(1);
+        let fixed = match prefix {
+            "m" => false,
+            "n" => true,
+            _ => return Err(serde::de::Error::custom(
+                format!("expected id starting with 'm' or 'n', got '{s}'")
+            )),
+        };
+        let idx = rest.parse::<usize>().map_err(serde::de::Error::custom)?;
+        Ok(MassId { idx, fixed })
+    }
 }
 
 impl Loader {
@@ -81,8 +104,10 @@ pub struct SettingData {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NodesData {
-    #[serde(rename = "mass")]
-    pub masses: Vec<MassData>
+    #[serde(rename = "node", default)]
+    pub fixed_nodes: Vec<NodeData>,
+    #[serde(rename = "mass", default)]
+    pub masses: Vec<MassData>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -94,9 +119,19 @@ pub struct LinksData {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct NodeData {
+    #[serde(rename = "@id")]
+    pub id: MassId,
+    #[serde(rename = "@x")]
+    pub x: f64,
+    #[serde(rename = "@y")]
+    pub y: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MassData {
-    #[serde(rename = "@id", deserialize_with = "deserialize_mass_id")]
-    pub id: usize,
+    #[serde(rename = "@id")]
+    pub id: MassId,
     #[serde(rename = "@x")]
     pub x: f64,
     #[serde(rename = "@y")]
@@ -106,6 +141,7 @@ pub struct MassData {
     #[serde(rename = "@vy")]
     pub vy: f64,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SpringData {
     #[serde(rename = "@a", deserialize_with = "deserialize_mass_id")]
@@ -115,6 +151,7 @@ pub struct SpringData {
     #[serde(rename = "@restlength")]
     pub restlength: f64,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MuscleData {
     #[serde(rename = "@a", deserialize_with = "deserialize_mass_id")]
