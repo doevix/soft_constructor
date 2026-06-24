@@ -60,7 +60,7 @@ impl WaveBox {
             let sense_coord = Pos2::new(
                 wave_rect.min.x + msl.sense as f32 * wave_rect.size().x,
                 y_coord);
-            painter.circle_filled(sense_coord, 2.0, dimmed_stroke_color);
+            painter.circle_filled(sense_coord, 2.5, dimmed_stroke_color);
         }
 
         // Get the coordinates of each point for the wave.
