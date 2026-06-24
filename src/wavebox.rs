@@ -17,7 +17,7 @@ impl WaveBox {
     pub fn draw(&self, ui: &mut Ui, area_rect: Rect, wave: Wave, muscles: &Vec<Muscle>) {
         let themed_bg_color_val = if ui.theme() == Theme::Light { 255 } else { 16 };
         let themed_stroke_color_val = if ui.theme() == Theme::Light { 0 } else { 128 };
-        let themed_stroke_dim_color_val = if ui.theme() == Theme::Light { 128 } else { 64 };
+        let themed_stroke_dim_color_val = if ui.theme() == Theme::Light { 180 } else { 64 };
 
         let wave_bg_color = Color32::from_gray(themed_bg_color_val);
         let wave_stroke_color = Color32::from_gray(themed_stroke_color_val);
@@ -39,6 +39,11 @@ impl WaveBox {
             Pos2::new(wave_left_limit, area_rect.min.y),
             Pos2::new(wave_right_limit, area_rect.max.y - wave_bottom_box_limit),
         );
+
+        // Draw the center reference line.
+        let centered_p1 = Pos2::new((wave_rect.min.x + wave_rect.max.x) / 2.0, wave_rect.min.y);
+        let centered_p2 = Pos2::new((wave_rect.min.x + wave_rect.max.x) / 2.0, wave_rect.max.y);
+        painter.line_segment([centered_p1, centered_p2], dimmed_stroke);
 
         let n_points = 60;
         let mut point_coords: Vec<Pos2> = Vec::new();
@@ -77,10 +82,11 @@ impl WaveBox {
         }
 
         // Draw the wave speed indicator.
-        let speed_height = wave_rect.max.y * wave.speed as f32 / 0.1;
+        let wave_speed_factor = wave.speed as f32 / 0.1;
+        let speed_height = wave_rect.size().y * wave_speed_factor;
         let speed_indicator_rect = Rect::from_min_max(
             area_rect.min,
-            Pos2::new(wave_rect.min.x, speed_height)
+            Pos2::new(wave_rect.min.x, wave_rect.min.y + speed_height)
         );
         painter.rect_filled(speed_indicator_rect, CornerRadiusF32::same(0.0), dimmed_stroke_color);
 
@@ -95,11 +101,11 @@ impl WaveBox {
         }
 
         // Draw the wavebox's borders.
-        painter.line_segment([wave_rect.min, Pos2::new(wave_rect.min.x, wave_rect.max.y)], dimmed_stroke);
-        painter.line_segment([Pos2::new(wave_rect.max.x, wave_rect.min.y), wave_rect.max], dimmed_stroke);
+        painter.line_segment([wave_rect.min, Pos2::new(wave_rect.min.x, wave_rect.max.y)], stroke);
+        painter.line_segment([Pos2::new(wave_rect.max.x, wave_rect.min.y), wave_rect.max], stroke);
         painter.line_segment(
             [Pos2::new(area_rect.min.x, wave_rect.max.y), Pos2::new(area_rect.max.x, wave_rect.max.y)],
-            dimmed_stroke
+            stroke
         );
     }
 }

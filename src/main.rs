@@ -117,6 +117,7 @@ struct ConstructorApp {
     pub acc: f64,
     pub sim_state: SimulationState,
     pub wavebox: WaveBox,
+    pub rect_viewport: Rect,
 }
 
 impl ConstructorApp {
@@ -128,6 +129,7 @@ impl ConstructorApp {
             acc: 0.0,
             sim_state: SimulationState::Simulate,
             wavebox: WaveBox::init(),
+            rect_viewport: Rect::ZERO,
         }
     }
     pub fn to_panel(&self, scale: f32, rect: Rect, v2_in: V2D) -> Pos2 {
@@ -285,6 +287,7 @@ impl eframe::App for ConstructorApp {
             ui.label(disp_frame_time);
         });
         egui::Panel::left("wave and settings")
+        .exact_size(self.rect_viewport.width() * 0.12)
         .resizable(false)
         .show_inside(ui, |ui| {
             let mut wave_area = ui.max_rect().clone();
@@ -340,6 +343,7 @@ impl eframe::App for ConstructorApp {
             let center_offset = Vec2::new((panel_area.width() - scaled_area.x) / 2.0, (panel_area.height() - scaled_area.y) / 2.0);
             let centered_min = panel_area.min + center_offset;
             let centered_rect = Rect::from_min_size(centered_min, scaled_area);
+            self.rect_viewport = centered_rect;
 
             ui.painter().rect_filled(panel_area, CornerRadiusF32::same(0.0), empty_area_color);
             ui.painter().rect_filled(centered_rect, CornerRadiusF32::same(0.0), bg_color);
