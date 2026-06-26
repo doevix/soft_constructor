@@ -42,7 +42,7 @@ impl SliderBox {
             let text_pos_y = 0.5 * div_width + area.min.y;
             let text_pos = Pos2::new(text_pos_x, text_pos_y);
 
-            painter.text(text_pos, Align2::CENTER_CENTER, String::from(val.2), FontId::new(18.0, FontFamily::default()), stroke_color);
+            painter.text(text_pos, Align2::LEFT_CENTER, String::from(val.2), FontId::new(18.0, FontFamily::default()), stroke_color);
             painter.rect_filled(slider_rect, CornerRadiusF32::ZERO, slider_color);
         }
 
@@ -61,5 +61,17 @@ impl SliderBox {
             Pos2::new(area.min.x, area.min.y + div_width),
             Pos2::new(area.max.x, area.min.y + div_width)
         ], stroke);
+    }
+
+    pub fn interact(&self, ui: &mut Ui, area: Rect, world: &mut World) {
+        let vals = [
+            (world.gravity, 4.0),
+            (world.friction, 1.0),
+            (world.springyness, 0.5),
+        ];
+        let response = ui.response();
+        if response.dragged() {
+
+        }
     }
 }

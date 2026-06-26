@@ -94,16 +94,16 @@ impl Wave {
         Self {
             amplitude, speed, angle, autoreverse,
             direction: match direction {
-                WaveDirection::Forward => 1.0,
-                WaveDirection::Reverse => -1.0,
+                WaveDirection::Forward => -1.0,
+                WaveDirection::Reverse => 1.0,
                 WaveDirection::Manual => 0.0,
             }
         }
     }
     pub fn set_direction(&mut self, direction: WaveDirection) {
         self.direction = match direction {
-            WaveDirection::Forward => 1.0,
-            WaveDirection::Reverse => -1.0,
+            WaveDirection::Forward => -1.0,
+            WaveDirection::Reverse => 1.0,
             WaveDirection::Manual => 0.0,
         }
     }

@@ -53,7 +53,7 @@ fn main() {
         Some((l_model, l_world, l_wave)) => { (l_model, l_world, l_wave) },
         None => {
             let empty_model = Model::new();
-            let empty_world= World::new(830.0, 542.0, 0.2, 0.2, 0.5, 0.75, 0.1, GravityDirection::Down);
+            let empty_world = World::new(830.0, 542.0, 0.2, 0.2, 0.5, 0.75, 0.1, GravityDirection::Down);
             let empty_wave = Wave::new(0.5, 0.1, 0.0, true, WaveDirection::Forward);
 
             (empty_model, empty_world, empty_wave)
@@ -117,8 +117,7 @@ fn load_model(filename: &str) -> Option<(Model, World, Wave)> {
             model_data.collisions.surface_reflection.abs(), model_data.collisions.surface_friction, gravity_direction
         );
         let autoreverse = if model_data.settings.autoreverse == "on" { true } else { false };
-        // The wave direction is backwards in sodaconstructor.
-        let wave_direction = if model_data.settings.wavedirection == "forward" { WaveDirection::Reverse} else { WaveDirection::Forward };
+        let wave_direction = if model_data.settings.wavedirection == "forward" { WaveDirection::Forward } else { WaveDirection::Reverse };
         let wave = Wave::new(model_data.wave.amplitude, model_data.wave.speed, model_data.wave.phase, autoreverse, wave_direction);
 
         Some((model, world, wave))
