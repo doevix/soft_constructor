@@ -10,11 +10,36 @@ pub enum WaveDirection {
     Manual,
 }
 
-#[derive(PartialEq, Eq)]
+pub trait DirFactor {
+    fn dir_factor(&self) -> f64;
+}
+
+impl DirFactor for WaveDirection {
+    fn dir_factor(&self) -> f64 {
+        match self {
+            Self::Forward => -1.0,
+            Self::Reverse => 1.0,
+            Self::Manual => 0.0,
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub enum GravityDirection {
+    #[default]
     Down,
     Up,
     Off,
+}
+
+impl DirFactor for GravityDirection {
+    fn dir_factor(&self) -> f64 {
+        match self {
+            Self::Down => -1.0,
+            Self::Up => 1.0,
+            Self::Off => 0.0,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq)]
@@ -42,7 +67,7 @@ pub struct World {
     pub width: f64,
     pub height: f64,
 
-    pub(crate) gravity_direction: f64,
+    pub gravity_direction: GravityDirection,
 }
 
 impl World {
@@ -50,12 +75,7 @@ impl World {
                surface_reflection: f64, surface_friction: f64, gravity_direction: GravityDirection) -> Self {
         Self {
             width, height,
-            gravity, friction, springyness, surface_reflection, surface_friction,
-            gravity_direction: match gravity_direction {
-                GravityDirection::Down => -1.0,
-                GravityDirection::Up => 1.0,
-                GravityDirection::Off => 0.0,
-            },
+            gravity, friction, springyness, surface_reflection, surface_friction, gravity_direction,
             stickyness: if surface_friction == 1.0 { SurfaceSticky::Slippy } else { SurfaceSticky::Sticky },
         }
     }
@@ -69,13 +89,6 @@ impl World {
                 self.surface_friction = 1.0;
                 self.stickyness = SurfaceSticky::Slippy;
             }
-        }
-    }
-    pub fn set_gravity_dir(&mut self, direction: GravityDirection) {
-        match direction {
-            GravityDirection::Down => self.gravity_direction = -1.0,
-            GravityDirection::Off => self.gravity_direction = 0.0,
-            GravityDirection::Up => self.gravity_direction = 1.0,
         }
     }
 }
@@ -244,7 +257,7 @@ impl Model {
     }
     fn env_affect(&mut self, world: World) {
         for mass in &mut self.masses {
-            mass.force.y += world.gravity * world.gravity_direction * GRAVITY_TUNE;
+            mass.force.y += world.gravity * world.gravity_direction.dir_factor() * GRAVITY_TUNE;
         }
     }
     fn wave_step(&mut self, wave: &mut Wave) {

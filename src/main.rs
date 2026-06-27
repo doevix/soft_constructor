@@ -220,13 +220,7 @@ impl eframe::App for ConstructorApp {
                     (GravityDirection::Up, "gravity reverse"),
                 ];
 
-                let mut current_gravity_dir = if self.world.gravity_direction < 0.0 {
-                    GravityDirection::Down
-                } else if self.world.gravity_direction > 0.0 {
-                    GravityDirection::Up
-                } else {
-                    GravityDirection::Off
-                };
+                let mut current_gravity_dir = self.world.gravity_direction;
 
                 let surface_selects = [
                     (SurfaceSticky::Sticky, "sticky"),
@@ -285,7 +279,7 @@ impl eframe::App for ConstructorApp {
                             ui.selectable_value(&mut current_gravity_dir, GravityDirection::Off, "gravity off");
                             ui.selectable_value(&mut current_gravity_dir, GravityDirection::Up, "gravity reverse");
                         });
-                        self.world.set_gravity_dir(current_gravity_dir);
+                        self.world.gravity_direction = current_gravity_dir;
 
                         // Surface friction options.
                         ComboBox::new("Surface", "")
