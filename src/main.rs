@@ -204,13 +204,10 @@ impl eframe::App for ConstructorApp {
                 let mut current_wave_mode = if self.wave.autoreverse {
                     WaveUserState::AutoReverse
                 } else {
-                    // Remember that sodaplay's wave is backwards.
-                    if self.wave.direction > 0.0 {
-                        WaveUserState::Reverse
-                    } else if self.wave.direction < 0.0 {
-                        WaveUserState::Forward
-                    } else {
-                        WaveUserState::Manual
+                    match self.wave.direction {
+                        WaveDirection::Forward => WaveUserState::Forward,
+                        WaveDirection::Reverse=> WaveUserState::Reverse,
+                        WaveDirection::Manual => WaveUserState::Manual,
                     }
                 };
 
@@ -258,15 +255,15 @@ impl eframe::App for ConstructorApp {
                             },
                             WaveUserState::Forward => {
                                 self.wave.autoreverse = false;
-                                self.wave.set_direction(WaveDirection::Forward);
+                                self.wave.direction = WaveDirection::Forward;
                             },
                             WaveUserState::Reverse => {
                                 self.wave.autoreverse = false;
-                                self.wave.set_direction(WaveDirection::Reverse);
+                                self.wave.direction = WaveDirection::Reverse;
                             },
                             WaveUserState::Manual => {
                                 self.wave.autoreverse = false;
-                                self.wave.set_direction(WaveDirection::Manual);
+                                self.wave.direction = WaveDirection::Manual;
                             },
                         }
 

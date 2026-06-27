@@ -4,14 +4,16 @@ const GRAVITY_TUNE: f64 = 0.25;
 const SPRINGING_TUNE: f64 = 0.25;
 const WAVESPEED_TUNE: f64 = 2.0;
 
+pub trait DirFactor {
+    fn dir_factor(&self) -> f64;
+}
+
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub enum WaveDirection {
+    #[default]
     Forward,
     Reverse,
     Manual,
-}
-
-pub trait DirFactor {
-    fn dir_factor(&self) -> f64;
 }
 
 impl DirFactor for WaveDirection {
@@ -20,6 +22,16 @@ impl DirFactor for WaveDirection {
             Self::Forward => -1.0,
             Self::Reverse => 1.0,
             Self::Manual => 0.0,
+        }
+    }
+}
+
+impl WaveDirection {
+    pub fn flip_dir(&mut self) {
+        match self {
+            Self::Forward => *self = Self::Reverse,
+            Self::Reverse => *self = Self::Forward,
+            Self::Manual => *self = Self::Manual,
         }
     }
 }
@@ -56,6 +68,15 @@ pub enum SurfaceSticky {
     Slippy,
 }
 
+impl DirFactor for SurfaceSticky {
+    fn dir_factor(&self) -> f64 {
+        match self {
+            Self::Sticky => 0.1,
+            Self::Slippy => 1.0,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Default, Debug)]
 pub struct World {
     pub gravity: f64,
@@ -80,16 +101,8 @@ impl World {
         }
     }
     pub fn set_stickyness(&mut self, stickyness: SurfaceSticky) {
-        match stickyness {
-            SurfaceSticky::Sticky => {
-                self.surface_friction = 0.1;
-                self.stickyness = SurfaceSticky::Sticky;
-            },
-            SurfaceSticky::Slippy => {
-                self.surface_friction = 1.0;
-                self.stickyness = SurfaceSticky::Slippy;
-            }
-        }
+        self.surface_friction = stickyness.dir_factor();
+        self.stickyness = stickyness;
     }
 }
 
@@ -99,29 +112,17 @@ pub struct Wave {
     pub speed: f64,
     pub angle: f64,
     pub autoreverse: bool,
-    pub(crate) direction: f64,
+    pub direction: WaveDirection,
 }
 
 impl Wave {
     pub fn new(amplitude: f64, speed: f64, angle: f64, autoreverse: bool, direction: WaveDirection) -> Self {
         Self {
-            amplitude, speed, angle, autoreverse,
-            direction: match direction {
-                WaveDirection::Forward => -1.0,
-                WaveDirection::Reverse => 1.0,
-                WaveDirection::Manual => 0.0,
-            }
-        }
-    }
-    pub fn set_direction(&mut self, direction: WaveDirection) {
-        self.direction = match direction {
-            WaveDirection::Forward => -1.0,
-            WaveDirection::Reverse => 1.0,
-            WaveDirection::Manual => 0.0,
+            amplitude, speed, angle, autoreverse, direction
         }
     }
     pub fn step(&mut self) {
-        self.angle += self.speed * self.direction * WAVESPEED_TUNE;
+        self.angle += self.speed * self.direction.dir_factor() * WAVESPEED_TUNE;
     }
     pub fn output(&self, sense: f64, phase: f64) -> f64 {
         1.0 + sense * self.amplitude * (self.angle + phase).sin()
@@ -296,7 +297,7 @@ impl Model {
                 mass.vel.x *= -world.surface_reflection;
                 mass.vel.y *= world.surface_friction;
                 if wave.autoreverse && self.last_wall_hit != WallHit::Left {
-                    wave.direction *= -1.0;
+                    wave.direction.flip_dir();
                     self.last_wall_hit = WallHit::Left;
                 }
             // Right wall.
@@ -305,7 +306,7 @@ impl Model {
                 mass.vel.x *= -world.surface_reflection;
                 mass.vel.y *= world.surface_friction;
                 if wave.autoreverse && self.last_wall_hit != WallHit::Right {
-                    wave.direction *= -1.0;
+                    wave.direction.flip_dir();
                     self.last_wall_hit = WallHit::Right;
                 }
             }
