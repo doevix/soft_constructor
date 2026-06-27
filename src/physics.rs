@@ -217,6 +217,9 @@ impl Model {
         self.springs[idx]
     }
 
+    pub fn reset_wall_hit(&mut self) {
+        self.last_wall_hit = WallHit::Untouched;
+    }
 
     pub fn add_mass(&mut self, mass: Mass) -> usize {
         self.masses.push(mass);

@@ -252,6 +252,7 @@ impl eframe::App for ConstructorApp {
                         match current_wave_mode {
                             WaveUserState::AutoReverse => {
                                 self.wave.autoreverse = true;
+                                self.model.reset_wall_hit();
                             },
                             WaveUserState::Forward => {
                                 self.wave.autoreverse = false;
@@ -315,12 +316,6 @@ impl eframe::App for ConstructorApp {
                 let r_ui = UiBuilder::new().max_rect(rect_area);
                 ui.scope_builder(r_ui, |ui| {
                     self.slider_box.draw(ui, rect_area, self.world);
-                //     ui.columns(3, |columns| {
-                //         for col in columns {
-                //             let painter = col.painter_at(col.content_rect());
-                //             painter.rect_filled(col.content_rect(), CornerRadiusF32::ZERO, Color32::from_gray(128));
-                //         }
-                //     });
                 });
             });
         });
