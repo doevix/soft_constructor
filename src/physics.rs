@@ -1,8 +1,8 @@
 use crate::v2d::V2D;
 
-const GRAVITY_TUNE: f64 = 0.25;
-const SPRINGING_TUNE: f64 = 0.25;
-const WAVESPEED_TUNE: f64 = 2.0;
+const GRAVITY_TUNE: f64 = 0.25; // best value 0.25
+const SPRINGING_TUNE: f64 = 0.25; // best value 0.25
+const WAVESPEED_TUNE: f64 = 2.0; // best value 2.0
 
 pub trait DirFactor {
     fn dir_factor(&self) -> f64;
@@ -327,7 +327,8 @@ impl Model {
             }
 
             // Environment friction.
-            mass.vel *= 1.0 - world.friction;
+            let checked_fric = if mass.vel.mag2() > 400.0 { (1.0 - world.friction) * 20.0 / mass.vel.mag2().sqrt() } else { 1.0 - world.friction };
+            mass.vel *= checked_fric;
 
             // Inertia velocity.
             mass.pos += mass.vel;

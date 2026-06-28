@@ -17,7 +17,8 @@ use crate::slider_box::SliderBox;
 use crate::wavebox::WaveBox;
 
 
-const TICKS_PER_SEC: f64 = 300.0;
+const TICKS_PER_SEC: f64 = 350.0;
+const MASS_RAD: f32 = 3.0;
 
 /*
  * Notes on sodaplay values:
@@ -28,6 +29,7 @@ const TICKS_PER_SEC: f64 = 300.0;
  * default surface reflection: 0.75
  * default amplitude 0.5
  * max wave speed = 0.1 which is weird.
+ * drawn mass radius is actually 3
  */
 
 #[derive(PartialEq, Eq)]
@@ -251,8 +253,10 @@ impl eframe::App for ConstructorApp {
 
                         match current_wave_mode {
                             WaveUserState::AutoReverse => {
-                                self.wave.autoreverse = true;
-                                self.model.reset_wall_hit();
+                                if !self.wave.autoreverse {
+                                    self.wave.autoreverse = true;
+                                    self.model.reset_wall_hit();
+                                }
                             },
                             WaveUserState::Forward => {
                                 self.wave.autoreverse = false;
@@ -397,11 +401,12 @@ impl eframe::App for ConstructorApp {
 
             for mass in self.model.get_masses() {
                 let pos = self.to_panel(scale, centered_rect, mass.approx_pos(alpha));
-                let rad: f32 = 2.5 * scale;
+                let rad: f32 = MASS_RAD * scale;
                 if !mass.fixed {
                     painter.circle_filled(pos, rad, mass_color);
                 } else {
-                    painter.rect_filled(Rect::from_center_size(pos, Vec2::new(5.0, 5.0) * scale), CornerRadiusF32::ZERO, mass_color);
+                    let node_size = Vec2::new(MASS_RAD * 2.0, MASS_RAD * 2.0);
+                    painter.rect_filled(Rect::from_center_size(pos, node_size * scale), CornerRadiusF32::ZERO, mass_color);
                 }
             }
 
