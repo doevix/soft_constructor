@@ -8,7 +8,7 @@ use std::f64::consts::TAU;
 use std::{time::Instant};
 
 use v2d::V2D;
-use eframe::egui::{self, Color32, ComboBox, MenuBar, Pos2, Rect, UiBuilder, Vec2 };
+use eframe::egui::{self, Color32, ComboBox, MenuBar, Pos2, Rect, Sense, UiBuilder, Vec2 };
 use eframe::epaint::{ CornerRadiusF32, Stroke };
 use rfd::FileDialog;
 
@@ -17,7 +17,7 @@ use crate::slider_box::SliderBox;
 use crate::wavebox::WaveBox;
 
 
-const TICKS_PER_SEC: f64 = 320.0;
+const TICKS_PER_SEC: f64 = 300.0;
 const MASS_RAD: f32 = 3.0;
 
 /*
@@ -139,6 +139,8 @@ struct ConstructorApp {
     pub wavebox: WaveBox,
     pub slider_box: SliderBox,
     pub rect_viewport: Rect,
+    pub viewer_pointer_pos: Option<Pos2>,
+    pub viewer_interact_pos: Option<Pos2>,
 }
 
 impl ConstructorApp {
@@ -152,6 +154,8 @@ impl ConstructorApp {
             wavebox: WaveBox::init(),
             slider_box: SliderBox::init(),
             rect_viewport: Rect::ZERO,
+            viewer_pointer_pos: None,
+            viewer_interact_pos: None,
         }
     }
     pub fn to_panel(&self, scale: f32, rect: Rect, v2_in: V2D) -> Pos2 {
@@ -299,8 +303,20 @@ impl eframe::App for ConstructorApp {
 
         });
         egui::Panel::bottom("info").show_inside(ui, |ui| {
+            let disp_pointer_pos = match self.viewer_pointer_pos {
+                None => String::from("(---, ---)"),
+                Some(pointer_pos) => format!("({:.3}, {:.3})", pointer_pos.x, pointer_pos.y),
+            };
+            let disp_interact_pos = match self.viewer_interact_pos {
+                None => String::from("(---, ---)"),
+                Some(pointer_pos) => format!("({:.3}, {:.3})", pointer_pos.x, pointer_pos.y),
+            };
             let disp_frame_time = format!("{:.2?} Hz", self.last_frame.recip());
-            ui.label(disp_frame_time);
+            ui.horizontal(|ui| {
+                ui.label(disp_pointer_pos);
+                ui.label(disp_interact_pos);
+                ui.label(disp_frame_time);
+            });
         });
         egui::Panel::left("wave and settings")
         .exact_size(self.rect_viewport.width() * 0.12)
@@ -378,6 +394,28 @@ impl eframe::App for ConstructorApp {
             ui.painter().rect_filled(centered_rect, CornerRadiusF32::same(0.0), bg_color);
 
             let painter = ui.painter_at(centered_rect);
+            let response = ui.allocate_rect(centered_rect, Sense::click_and_drag());
+
+            self.viewer_pointer_pos = if let Some(pointer_pos) = response.hover_pos() {
+                Some(Pos2::new((pointer_pos.x - centered_rect.min.x) / scale,
+                                (centered_rect.min.y + centered_rect.size().y - pointer_pos.y) / scale))
+            } else { None };
+
+            self.viewer_interact_pos = if let Some(interact_pos) = response.interact_pointer_pos() {
+                Some(Pos2::new((interact_pos.x - centered_rect.min.x) / scale,
+                                (centered_rect.min.y + centered_rect.size().y - interact_pos.y) / scale))
+            } else { None };
+
+            if let Some(i_pos) = self.viewer_interact_pos {
+                let interact_pos = V2D::new(i_pos.x as f64, i_pos.y as f64);
+                if let Some(mass_idx) = self.model.locate_mass(interact_pos, 8.0) {
+                    let d_motion = response.drag_motion() * scale;
+                    let motion = V2D::new(d_motion.x as f64, -d_motion.y as f64);
+                    self.model.translate_mass(mass_idx, motion);
+                }
+            };
+
+
             for spring in self.model.get_springs() {
             let spring_style = Stroke::new(1.0 * scale, spring_color);
                 let m1 = self.model.get_mass(spring.a);
@@ -407,6 +445,15 @@ impl eframe::App for ConstructorApp {
                 } else {
                     let node_size = Vec2::new(MASS_RAD * 2.0, MASS_RAD * 2.0);
                     painter.rect_filled(Rect::from_center_size(pos, node_size * scale), CornerRadiusF32::ZERO, mass_color);
+                }
+
+                let rad_detect = 2.0 * MASS_RAD;
+                let rad_highlight = MASS_RAD + 2.0;
+                if let Some(hover_pos) = self.viewer_pointer_pos {
+                    let h_pos = V2D::new(hover_pos.x as f64, hover_pos.y as f64);
+                    if (h_pos - mass.pos).mag() < rad_detect as f64 {
+                        painter.circle_stroke(pos, rad_highlight * scale, Stroke::new(scale, Color32::from_gray(128)));
+                    }
                 }
             }
 

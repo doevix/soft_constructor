@@ -278,6 +278,15 @@ impl Model {
         }
     }
 
+    pub fn translate_mass(&mut self, idx: usize, vel: V2D) {
+        self.masses[idx].vel = V2D::null();
+        self.masses[idx].pos += vel;
+    }
+
+    pub fn locate_mass(&self, pos: V2D, threshold: f64) -> Option<usize> {
+        self.masses.iter().position(|mass| (pos - mass.pos).mag() < threshold)
+    }
+
     pub fn step(&mut self, wave: &mut Wave, world: World) {
         self.capture_last();
         self.clear_forces();
