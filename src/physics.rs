@@ -3,6 +3,7 @@ use crate::v2d::V2D;
 const GRAVITY_TUNE: f64 = 0.25; // best value 0.25
 const SPRINGING_TUNE: f64 = 0.25; // best value 0.25
 const WAVESPEED_TUNE: f64 = 2.0; // best value 2.0
+const SYRUP_THRESHOLD: f64 = 20.0;
 
 pub trait DirFactor {
     fn dir_factor(&self) -> f64;
@@ -283,7 +284,6 @@ impl Model {
         self.springing(world.springyness);
         self.env_affect(world);
 
-
         // Euler integrator.
         for mass in &mut self.masses {
             if mass.fixed { continue; }
@@ -327,7 +327,12 @@ impl Model {
             }
 
             // Environment friction.
-            let checked_fric = if mass.vel.mag2() > 400.0 { (1.0 - world.friction) * 20.0 / mass.vel.mag2().sqrt() } else { 1.0 - world.friction };
+            let checked_fric = if mass.vel.mag() > SYRUP_THRESHOLD {
+                (1.0 - world.friction) * SYRUP_THRESHOLD / mass.vel.mag()
+            } else {
+                1.0 - world.friction
+            };
+
             mass.vel *= checked_fric;
 
             // Inertia velocity.

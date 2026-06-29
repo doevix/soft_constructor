@@ -17,7 +17,7 @@ use crate::slider_box::SliderBox;
 use crate::wavebox::WaveBox;
 
 
-const TICKS_PER_SEC: f64 = 350.0;
+const TICKS_PER_SEC: f64 = 320.0;
 const MASS_RAD: f32 = 3.0;
 
 /*
